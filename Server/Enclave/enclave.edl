@@ -1,0 +1,61 @@
+/* Enclave.edl - Top EDL file. */
+
+enclave {
+  from "sgx_tstdc.edl" import *;
+  include "time.h"
+  include "stdint.h"
+  include "stdbool.h"
+
+  trusted{
+    public int ecall_test([in, size=message_len]const char *message, size_t message_len);	
+    //public void digest2hex([in, size=len]const unsigned char* digest, size_t len);
+    public sgx_status_t ecall_start_tls_server(void);
+    public sgx_status_t ecall_main(void);
+
+    // for seal/unseal
+    //public sgx_status_t unseal_data([in, size=data_size] const uint8_t *sealed_blob, [out, size=data_size]char *decrypt_data, size_t data_size);
+    public uint32_t get_sealed_data_size(uint32_t data_size);
+    //public sgx_status_t seal_data([in, size=data_size]char *encrypt_data, [out, size=data_size]uint8_t* sealed_blob, uint32_t data_size);
+  };
+
+  untrusted {
+    void ocall_print([in, string]const char *str);
+    void uprint([in, string] const char *str);
+    void usgx_exit(int reason);
+    void print_log(long start, long end, size_t len);
+    void print_error_message(sgx_status_t ret);
+
+    // for performance
+    long get_system_time(void);
+
+    // for seal/unseal
+    sgx_status_t read_file_to_buf([in, string]const char *filename, [out, size=bsize]uint8_t *buf, size_t bsize);
+    sgx_status_t write_buf_to_file([in, string]const char *filename, [in, size=bsize]const uint8_t *buf, size_t bsize, long offset);
+    size_t get_file_size([in, size=len]const char *filename, size_t len);
+
+    // publickey
+    sgx_status_t ocall_WritePublicKeyFile([in, string]const char *user_id, [in]const char *key_str, size_t len);
+    sgx_status_t ocall_ReadPublicKeyFile([in, string]const char *user_id, [out,size=len]char *key_str, size_t len);
+    sgx_status_t ocall_existsPublicKeyFile([in, size=id_size]const char *user_id, size_t id_size);
+    
+    // SGX-OpenSSL
+    long ocall_sgx_clock(void); // For performance evaluation
+    time_t ocall_sgx_time([out, size=t_len]time_t *timep, int t_len);
+    struct tm *ocall_sgx_localtime([in, size=t_len]const time_t *timep, int t_len);
+    struct tm *ocall_sgx_gmtime_r([in, size=t_len]const time_t *timep, int t_len, [out, size=tmp_len]struct tm *tmp, int tmp_len);
+    int ocall_sgx_gettimeofday([in, out, size=tv_size]void *tv, int tv_size);
+    int ocall_sgx_getsockopt(int s, int level, int optname, [out, size=optval_len]char *optval, int optval_len, [in,out, size=4]int* optlen);
+    int ocall_sgx_setsockopt(int s, int level, int optname, [in, size=optlen]const void *optval, int optlen);
+    int ocall_sgx_socket(int af, int type, int protocol);
+    int ocall_sgx_listen(int s, int backlog);
+    int ocall_sgx_bind(int s, [in, size=addr_size]const void *addr, int addr_size);
+    int ocall_sgx_connect(int s, [in, size=addrlen]const void *addr, int addrlen);
+    int ocall_sgx_accept(int s, [out, size=addr_size]void *addr, int addr_size, [in, out, size=4]int *addrlen);
+    int ocall_sgx_shutdown(int fd, int how);
+    int ocall_sgx_read(int fd, [out, size=n]void *buf, int n);
+    int ocall_sgx_write(int fd, [in, size=n]const void *buf, int n);
+    int ocall_sgx_close(int fd);
+    int ocall_sgx_getenv([in,size=envlen]const char *env, int envlen, [out,size=ret_len]char *ret_str,int ret_len);
+    void ocall_print_string([in, string] const char *str);
+    };
+};
