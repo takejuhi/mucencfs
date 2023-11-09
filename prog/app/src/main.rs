@@ -29,6 +29,14 @@ extern "C" {
         some_string: *const u8,
         len: usize,
     ) -> sgx_status_t;
+    fn ecall_save_key(
+        eid: sgx_enclave_id_t,
+        retval: *mut sgx_status_t,
+        sub: *const u8,
+        sub_len: usize,
+        key: *const u8,
+        key_len: usize,
+    ) -> sgx_status_t;
 }
 
 fn init_enclave() -> SgxResult<SgxEnclave> {
@@ -62,16 +70,20 @@ fn main() {
         }
     };
 
-    let input_string = String::from("Sending this string to the enclave then printing it\n");
+    // let input_string = String::from("Sending this string to the enclave then printing it\n");
+    let sub = String::from("alice@gmail.com");
+    let key = String::from("thisisalicekey");
 
     let mut retval = sgx_status_t::SGX_SUCCESS;
 
     let result = unsafe {
-        ecall_test(
+        ecall_save_key(
             enclave.geteid(),
             &mut retval,
-            input_string.as_ptr() as *const u8,
-            input_string.len(),
+            sub.as_ptr() as *const u8,
+            sub.len(),
+            key.as_ptr() as *const u8,
+            key.len(),
         )
     };
 
