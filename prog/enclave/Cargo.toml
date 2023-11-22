@@ -11,13 +11,15 @@ crate-type = ["staticlib"]
 default = []
 
 [target.'cfg(not(target_env = "sgx"))'.dependencies] # You can remove what you don't need, except types and tstd
-sgx_types = { git = "https://github.com/apache/teaclave-sgx-sdk.git" }
-sgx_tstd = { git = "https://github.com/apache/teaclave-sgx-sdk.git", features = ["backtrace"] }
-sgx_tcrypto = { git = "https://github.com/apache/teaclave-sgx-sdk.git" }
-sgx_trts = { git = "https://github.com/apache/teaclave-sgx-sdk.git" }
-sgx_tseal = { git = "https://github.com/apache/teaclave-sgx-sdk.git" }
-sgx_serialize = { git = "https://github.com/apache/teaclave-sgx-sdk.git" }
-sgx_alloc = { git = "https://github.com/apache/teaclave-sgx-sdk.git" }
-sgx_libc = { git = "https://github.com/apache/teaclave-sgx-sdk.git" }
+sgx_types = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git"  }
+sgx_tstd = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git", features = ["backtrace"] }
+sgx_tcrypto = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git"  }
+sgx_trts = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git"  }
+sgx_tseal = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git"  }
+sgx_serialize = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git"  }
+sgx_alloc = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git"  }
+sgx_libc = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git"  }
 
-[patch.'https://github.com/apache/teaclave-sgx-sdk.git']
+# once_cell = { git = "https://github.com/mesalock-linux/once_cell-sgx" }
+
+[patch.'https://github.com/apache/incubator-teaclave-sgx-sdk.git']

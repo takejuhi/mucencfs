@@ -28,6 +28,7 @@ extern crate sgx_tstd as std;
 use sgx_types::*;
 use std::io::{self, Write};
 use std::slice;
+use std::string::String;
 
 #[no_mangle]
 pub extern "C" fn ecall_test(some_string: *const u8, some_len: usize) -> sgx_status_t {
@@ -41,13 +42,13 @@ pub extern "C" fn ecall_test(some_string: *const u8, some_len: usize) -> sgx_sta
 
 #[no_mangle]
 pub extern "C" fn ecall_save_key(sub: *const u8, sub_len: usize, key: *const u8, key_len: usize) -> sgx_status_t {
-    use std::string::String;
-
     let sub = unsafe { slice::from_raw_parts(sub, sub_len) };
     let key = unsafe { slice::from_raw_parts(key, key_len) };
 
-    // println!("sub: {:?}\nkey: {:?}", sub, key);
-    println!("sub: {}\nkey: {}", sub.iter().map(|&c| c as char).collect::<String>(), key.iter().map(|&c| c as char).collect::<String>());
+    let sub = sub.iter().map(|&c| c as char).collect::<String>();
+    let key = key.iter().map(|&c| c as char).collect::<String>();
+
+    println!("sub: {sub}\nkey: {key}");
 
     sgx_status_t::SGX_SUCCESS
 }

@@ -15,48 +15,18 @@
 // specific language governing permissions and limitations
 // under the License..
 
+extern crate once_cell;
 extern crate sgx_types;
 extern crate sgx_urts;
+
+mod db;
+mod ecall;
+mod util;
+
+use db::DATABASE;
+use ecall::{ecall_save_key, ecall_test};
 use sgx_types::*;
-use sgx_urts::SgxEnclave;
-
-static ENCLAVE_FILE: &'static str = "enclave.signed.so";
-
-extern "C" {
-    fn ecall_test(
-        eid: sgx_enclave_id_t,
-        retval: *mut sgx_status_t,
-        some_string: *const u8,
-        len: usize,
-    ) -> sgx_status_t;
-    fn ecall_save_key(
-        eid: sgx_enclave_id_t,
-        retval: *mut sgx_status_t,
-        sub: *const u8,
-        sub_len: usize,
-        key: *const u8,
-        key_len: usize,
-    ) -> sgx_status_t;
-}
-
-fn init_enclave() -> SgxResult<SgxEnclave> {
-    let mut launch_token: sgx_launch_token_t = [0; 1024];
-    let mut launch_token_updated: i32 = 0;
-    // call sgx_create_enclave to initialize an enclave instance
-    // Debug Support: set 2nd parameter to 1
-    let debug = 1;
-    let mut misc_attr = sgx_misc_attribute_t {
-        secs_attr: sgx_attributes_t { flags: 0, xfrm: 0 },
-        misc_select: 0,
-    };
-    SgxEnclave::create(
-        ENCLAVE_FILE,
-        debug,
-        &mut launch_token,
-        &mut launch_token_updated,
-        &mut misc_attr,
-    )
-}
+use util::init_enclave;
 
 fn main() {
     let enclave = match init_enclave() {
@@ -70,9 +40,11 @@ fn main() {
         }
     };
 
+    // let mut db = HashMap::new();
+
     // let input_string = String::from("Sending this string to the enclave then printing it\n");
     let sub = String::from("alice@gmail.com");
-    let key = String::from("thisisalicekey");
+    let key = String::from("alice-key");
 
     let mut retval = sgx_status_t::SGX_SUCCESS;
 
@@ -80,6 +52,7 @@ fn main() {
         ecall_save_key(
             enclave.geteid(),
             &mut retval,
+            // &mut db as *mut HashMap<String, String>,
             sub.as_ptr() as *const u8,
             sub.len(),
             key.as_ptr() as *const u8,
