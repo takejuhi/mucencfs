@@ -25,11 +25,29 @@ enclave {
     trusted
     {
         /* ECALLs */
-        public sgx_status_t ecall_test([in, size=len] const uint8_t* some_string, size_t len);
-	public sgx_status_t ecall_save_key([in, size=sub_len] const uint8_t* sub, size_t sub_len, [in, size=key_len] const uint8_t* key, size_t key_len);
+        public sgx_status_t save_key(
+            [in, out, size=scratch_pad_size] uint8_t* scratch_pad_pointer,
+            size_t scratch_pad_size,
+            [in, size=sub_len] const uint8_t* sub,
+            size_t sub_len,
+            [in, size=key_len] const uint8_t* key,
+            size_t key_len
+        );
     };
     untrusted
     {
         /* OCALLs */
+        sgx_status_t save_to_db(
+            [in, size=key_size] const uint8_t* key_pointer,
+            size_t key_size,
+            [in, size=seadled_log_size] const uint8_t* scratch_pad_pointer,
+            size_t seadled_log_size
+        );
+        sgx_status_t get_from_db(
+            [in, size=key_size] const uint8_t* key_pointer,
+            size_t key_size,
+            [out, size=value_size] uint8_t* value_pointer,
+            size_t value_size
+        );
     };
 };

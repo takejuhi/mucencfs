@@ -25,30 +25,25 @@ extern crate sgx_types;
 #[macro_use]
 extern crate sgx_tstd as std;
 
+mod ocall;
+
 use sgx_types::*;
 use std::io::{self, Write};
 use std::slice;
 use std::string::String;
 
 #[no_mangle]
-pub extern "C" fn ecall_test(some_string: *const u8, some_len: usize) -> sgx_status_t {
-    let str_slice = unsafe { slice::from_raw_parts(some_string, some_len) };
-    let _ = io::stdout().write(str_slice);
-
-    println!("Message from the enclave");
-
-    sgx_status_t::SGX_SUCCESS
-}
-
-#[no_mangle]
-pub extern "C" fn ecall_save_key(sub: *const u8, sub_len: usize, key: *const u8, key_len: usize) -> sgx_status_t {
-    let sub = unsafe { slice::from_raw_parts(sub, sub_len) };
-    let key = unsafe { slice::from_raw_parts(key, key_len) };
-
-    let sub = sub.iter().map(|&c| c as char).collect::<String>();
-    let key = key.iter().map(|&c| c as char).collect::<String>();
-
-    println!("sub: {sub}\nkey: {key}");
-
-    sgx_status_t::SGX_SUCCESS
+pub extern "C" fn save_key(
+    scratch_pad_pointer: *mut u8,
+    _scratch_pad_size: usize,
+    id: *const u8,
+    id_size: usize,
+    key: *const u8,
+    key_len: usize,
+) -> sgx_status_t {
+    let mut retval = sgx_status_t::SGX_SUCCESS;
+    /*
+    TODO: sealing
+    ocall::save_to_db(&mut retval, id, id_size, scratch_pad_pointer, k)
+    */
 }

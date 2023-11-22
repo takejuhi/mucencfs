@@ -1,25 +1,37 @@
 #include "Enclave_u.h"
 #include <errno.h>
 
-typedef struct ms_ecall_test_t {
+typedef struct ms_save_key_t {
 	sgx_status_t ms_retval;
-	const uint8_t* ms_some_string;
-	size_t ms_len;
-} ms_ecall_test_t;
-
-typedef struct ms_ecall_save_key_t {
-	sgx_status_t ms_retval;
+	uint8_t* ms_scratch_pad_pointer;
+	size_t ms_scratch_pad_size;
 	const uint8_t* ms_sub;
 	size_t ms_sub_len;
 	const uint8_t* ms_key;
 	size_t ms_key_len;
-} ms_ecall_save_key_t;
+} ms_save_key_t;
 
 typedef struct ms_t_global_init_ecall_t {
 	uint64_t ms_id;
 	const uint8_t* ms_path;
 	size_t ms_len;
 } ms_t_global_init_ecall_t;
+
+typedef struct ms_save_to_db_t {
+	sgx_status_t ms_retval;
+	const uint8_t* ms_key_pointer;
+	size_t ms_key_size;
+	const uint8_t* ms_scratch_pad_pointer;
+	size_t ms_seadled_log_size;
+} ms_save_to_db_t;
+
+typedef struct ms_get_from_db_t {
+	sgx_status_t ms_retval;
+	const uint8_t* ms_key_pointer;
+	size_t ms_key_size;
+	uint8_t* ms_value_pointer;
+	size_t ms_value_size;
+} ms_get_from_db_t;
 
 typedef struct ms_u_thread_set_event_ocall_t {
 	int ms_retval;
@@ -535,6 +547,22 @@ typedef struct ms_sgx_thread_set_multiple_untrusted_events_ocall_t {
 	const void** ms_waiters;
 	size_t ms_total;
 } ms_sgx_thread_set_multiple_untrusted_events_ocall_t;
+
+static sgx_status_t SGX_CDECL Enclave_save_to_db(void* pms)
+{
+	ms_save_to_db_t* ms = SGX_CAST(ms_save_to_db_t*, pms);
+	ms->ms_retval = save_to_db(ms->ms_key_pointer, ms->ms_key_size, ms->ms_scratch_pad_pointer, ms->ms_seadled_log_size);
+
+	return SGX_SUCCESS;
+}
+
+static sgx_status_t SGX_CDECL Enclave_get_from_db(void* pms)
+{
+	ms_get_from_db_t* ms = SGX_CAST(ms_get_from_db_t*, pms);
+	ms->ms_retval = get_from_db(ms->ms_key_pointer, ms->ms_key_size, ms->ms_value_pointer, ms->ms_value_size);
+
+	return SGX_SUCCESS;
+}
 
 static sgx_status_t SGX_CDECL Enclave_u_thread_set_event_ocall(void* pms)
 {
@@ -1106,10 +1134,12 @@ static sgx_status_t SGX_CDECL Enclave_sgx_thread_set_multiple_untrusted_events_o
 
 static const struct {
 	size_t nr_ocall;
-	void * table[71];
+	void * table[73];
 } ocall_table_Enclave = {
-	71,
+	73,
 	{
+		(void*)Enclave_save_to_db,
+		(void*)Enclave_get_from_db,
 		(void*)Enclave_u_thread_set_event_ocall,
 		(void*)Enclave_u_thread_wait_event_ocall,
 		(void*)Enclave_u_thread_set_multiple_events_ocall,
@@ -1183,26 +1213,17 @@ static const struct {
 		(void*)Enclave_sgx_thread_set_multiple_untrusted_events_ocall,
 	}
 };
-sgx_status_t ecall_test(sgx_enclave_id_t eid, sgx_status_t* retval, const uint8_t* some_string, size_t len)
+sgx_status_t save_key(sgx_enclave_id_t eid, sgx_status_t* retval, uint8_t* scratch_pad_pointer, size_t scratch_pad_size, const uint8_t* sub, size_t sub_len, const uint8_t* key, size_t key_len)
 {
 	sgx_status_t status;
-	ms_ecall_test_t ms;
-	ms.ms_some_string = some_string;
-	ms.ms_len = len;
-	status = sgx_ecall(eid, 0, &ocall_table_Enclave, &ms);
-	if (status == SGX_SUCCESS && retval) *retval = ms.ms_retval;
-	return status;
-}
-
-sgx_status_t ecall_save_key(sgx_enclave_id_t eid, sgx_status_t* retval, const uint8_t* sub, size_t sub_len, const uint8_t* key, size_t key_len)
-{
-	sgx_status_t status;
-	ms_ecall_save_key_t ms;
+	ms_save_key_t ms;
+	ms.ms_scratch_pad_pointer = scratch_pad_pointer;
+	ms.ms_scratch_pad_size = scratch_pad_size;
 	ms.ms_sub = sub;
 	ms.ms_sub_len = sub_len;
 	ms.ms_key = key;
 	ms.ms_key_len = key_len;
-	status = sgx_ecall(eid, 1, &ocall_table_Enclave, &ms);
+	status = sgx_ecall(eid, 0, &ocall_table_Enclave, &ms);
 	if (status == SGX_SUCCESS && retval) *retval = ms.ms_retval;
 	return status;
 }
@@ -1214,14 +1235,14 @@ sgx_status_t t_global_init_ecall(sgx_enclave_id_t eid, uint64_t id, const uint8_
 	ms.ms_id = id;
 	ms.ms_path = path;
 	ms.ms_len = len;
-	status = sgx_ecall(eid, 2, &ocall_table_Enclave, &ms);
+	status = sgx_ecall(eid, 1, &ocall_table_Enclave, &ms);
 	return status;
 }
 
 sgx_status_t t_global_exit_ecall(sgx_enclave_id_t eid)
 {
 	sgx_status_t status;
-	status = sgx_ecall(eid, 3, &ocall_table_Enclave, NULL);
+	status = sgx_ecall(eid, 2, &ocall_table_Enclave, NULL);
 	return status;
 }
 

@@ -22,6 +22,14 @@
 extern "C" {
 #endif
 
+#ifndef SAVE_TO_DB_DEFINED__
+#define SAVE_TO_DB_DEFINED__
+sgx_status_t SGX_UBRIDGE(SGX_NOCONVENTION, save_to_db, (const uint8_t* key_pointer, size_t key_size, const uint8_t* scratch_pad_pointer, size_t seadled_log_size));
+#endif
+#ifndef GET_FROM_DB_DEFINED__
+#define GET_FROM_DB_DEFINED__
+sgx_status_t SGX_UBRIDGE(SGX_NOCONVENTION, get_from_db, (const uint8_t* key_pointer, size_t key_size, uint8_t* value_pointer, size_t value_size));
+#endif
 #ifndef U_THREAD_SET_EVENT_OCALL_DEFINED__
 #define U_THREAD_SET_EVENT_OCALL_DEFINED__
 int SGX_UBRIDGE(SGX_NOCONVENTION, u_thread_set_event_ocall, (int* error, const void* tcs));
@@ -307,8 +315,7 @@ int SGX_UBRIDGE(SGX_CDECL, sgx_thread_setwait_untrusted_events_ocall, (const voi
 int SGX_UBRIDGE(SGX_CDECL, sgx_thread_set_multiple_untrusted_events_ocall, (const void** waiters, size_t total));
 #endif
 
-sgx_status_t ecall_test(sgx_enclave_id_t eid, sgx_status_t* retval, const uint8_t* some_string, size_t len);
-sgx_status_t ecall_save_key(sgx_enclave_id_t eid, sgx_status_t* retval, const uint8_t* sub, size_t sub_len, const uint8_t* key, size_t key_len);
+sgx_status_t save_key(sgx_enclave_id_t eid, sgx_status_t* retval, uint8_t* scratch_pad_pointer, size_t scratch_pad_size, const uint8_t* sub, size_t sub_len, const uint8_t* key, size_t key_len);
 sgx_status_t t_global_init_ecall(sgx_enclave_id_t eid, uint64_t id, const uint8_t* path, size_t len);
 sgx_status_t t_global_exit_ecall(sgx_enclave_id_t eid);
 

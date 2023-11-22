@@ -9,5 +9,7 @@ sgx_types = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git" }
 sgx_urts = { git = "https://github.com/apache/incubator-teaclave-sgx-sdk.git" }
 
 once_cell = "1.18.0"
+env_logger ={ version = "*" }
+log ={ version = "*" }
 
 [patch.'https://github.com/apache/incubator-teaclave-sgx-sdk.git']

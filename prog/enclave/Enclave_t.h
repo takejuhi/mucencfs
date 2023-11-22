@@ -21,11 +21,12 @@
 extern "C" {
 #endif
 
-sgx_status_t ecall_test(const uint8_t* some_string, size_t len);
-sgx_status_t ecall_save_key(const uint8_t* sub, size_t sub_len, const uint8_t* key, size_t key_len);
+sgx_status_t save_key(uint8_t* scratch_pad_pointer, size_t scratch_pad_size, const uint8_t* sub, size_t sub_len, const uint8_t* key, size_t key_len);
 void t_global_init_ecall(uint64_t id, const uint8_t* path, size_t len);
 void t_global_exit_ecall(void);
 
+sgx_status_t SGX_CDECL save_to_db(sgx_status_t* retval, const uint8_t* key_pointer, size_t key_size, const uint8_t* scratch_pad_pointer, size_t seadled_log_size);
+sgx_status_t SGX_CDECL get_from_db(sgx_status_t* retval, const uint8_t* key_pointer, size_t key_size, uint8_t* value_pointer, size_t value_size);
 sgx_status_t SGX_CDECL u_thread_set_event_ocall(int* retval, int* error, const void* tcs);
 sgx_status_t SGX_CDECL u_thread_wait_event_ocall(int* retval, int* error, const void* tcs, const struct timespec* timeout);
 sgx_status_t SGX_CDECL u_thread_set_multiple_events_ocall(int* retval, int* error, const void** tcss, int total);
