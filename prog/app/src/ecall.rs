@@ -5,10 +5,16 @@ extern "C" {
         eid: sgx_enclave_id_t,
         retval: *mut sgx_status_t,
         scratch_pad_pointer: *mut u8,
-        _scratch_pad_pointer: usize,
+        _scratch_pad_len: usize,
         sub: *const u8,
         sub_len: usize,
         key: *const u8,
         key_len: usize,
+    ) -> sgx_status_t;
+    pub fn remote_attestation(
+        eid: sgx_enclave_id_t,
+        retval: *mut sgx_status_t,
+        scratch_pad_pointer: *mut u8,
+        _scratch_pad_len: usize,
     ) -> sgx_status_t;
 }

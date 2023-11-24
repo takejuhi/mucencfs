@@ -17,6 +17,9 @@
 
 use sgx_types::{sgx_enclave_id_t, sgx_status_t};
 
+use crate::server::Server;
+
+extern crate anyhow;
 extern crate env_logger;
 extern crate once_cell;
 extern crate sgx_types;
@@ -27,6 +30,7 @@ extern crate log;
 mod db;
 mod ecall;
 mod scratch_pad;
+mod server;
 mod util;
 
 struct User {
@@ -64,7 +68,6 @@ fn main() {
     let mut retval = sgx_status_t::SGX_SUCCESS;
     let mut scratch_pad = vec![0u8; scratch_pad::SIZE];
     let scratch_pad_pointer: *mut u8 = &mut scratch_pad[0];
-
     let enclave = match util::init_enclave() {
         Ok(r) => {
             println!("[+] Init Enclave Successful {}!", r.geteid());
@@ -76,26 +79,39 @@ fn main() {
         }
     };
 
-    let alice = User::new("alice@gmail.com".to_string(), "alice-key".to_string());
+    let mut server = Server::new();
+    loop {
+        server.wait();
 
-    let result = unsafe {
-        alice.save_to_db(
-            enclave.geteid(),
-            &mut retval,
-            scratch_pad_pointer,
-            scratch_pad.len(),
-        )
-    };
+        let key: Vec<u8> = match unsafe {
+            server.verify(
+                enclave.geteid(),
+                &mut retval,
+                scratch_pad_pointer,
+                scratch_pad.len(),
+            )
+        } {
+            sgx_status_t::SGX_SUCCESS => {
+                unimplemented!("extract key from scratch pad");
+            }
+            _ => {
+                // error
+                continue;
+            }
+        };
 
-    match result {
-        sgx_status_t::SGX_SUCCESS => {}
-        _ => {
-            println!("[-] ECALL Enclave Failed {}!", result.as_str());
-            return;
-        }
+        server.send_encrypt_key(&key);
+
+        let user = server.get_data();
+        let result = unsafe {
+            user.save_to_db(
+                enclave.geteid(),
+                &mut retval,
+                scratch_pad_pointer,
+                scratch_pad.len(),
+            )
+        };
     }
-
-    println!("[+] ecall_test success...");
 
     enclave.destroy();
 }
