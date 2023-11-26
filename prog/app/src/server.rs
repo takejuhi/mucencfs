@@ -7,10 +7,10 @@ pub struct Server;
 
 impl Server {
     pub const fn new() -> Self {
-        unimplemented!();
+        unimplemented!("start server");
     }
     pub fn wait(&mut self) -> Result<()> {
-        unimplemented!();
+        unimplemented!("wait for connection");
     }
     pub unsafe fn verify(
         &self,
@@ -20,12 +20,12 @@ impl Server {
         scratch_pad_len: usize,
     ) -> sgx_status_t {
         ecall::remote_attestation(eid, retval, scratch_pad_pointer, scratch_pad_len);
-        unimplemented!();
+        unimplemented!("verify this server");
     }
-    pub fn send_encrypt_key(&self, key: &[u8]) {
-        unimplemented!();
+    pub fn send_report(&self) {
+        unimplemented!("send attestation report to client");
     }
-    pub(crate) fn get_data(&self) -> User {
-        unimplemented!();
+    pub fn authentication_request(&self) -> User {
+        unimplemented!("https://accounts.google.com/o/oauth2/v2/auth?...");
     }
 }

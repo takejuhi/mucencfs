@@ -32,6 +32,24 @@ use std::io::{self, Write};
 use std::slice;
 use std::string::String;
 
+struct Item {
+    id: Vec<u8>,
+    key: Vec<u8>,
+    sign: Vec<u8>,
+}
+
+impl Item {
+    fn new(id: &[u8], key: &[u8]) -> Self {
+        let sign = Vec::new();
+        unimplemented!();
+        Self {
+            id: id.to_vec(),
+            key: key.to_vec(),
+            sign,
+        }
+    }
+}
+
 #[no_mangle]
 pub extern "C" fn save_key(
     scratch_pad_pointer: *mut u8,
@@ -42,8 +60,23 @@ pub extern "C" fn save_key(
     key_len: usize,
 ) -> sgx_status_t {
     let mut retval = sgx_status_t::SGX_SUCCESS;
-    /*
-    TODO: sealing
-    ocall::save_to_db(&mut retval, id, id_size, scratch_pad_pointer, k)
-    */
+    let id = unsafe { slice::from_raw_parts(id, id_size) };
+    let key = unsafe { slice::from_raw_parts(key, key_size) };
+    let item = Item::new(id, key);
+
+    let encoded_item = serde_cbor::to_vec(&item).unwarp();
+    let encoded_item_slice = encoded_item.as_slice();
+    let extra_data = [0u8; 0];
+
+    let sealed_data = match SgxSealedData::<[u8]>::seal_data(&extra_data, encoded_item_slice) {
+        Ok(sealed_data) => sealed_data,
+        Err(sgx_error) => return sgx_error;
+    };
+    let sealed_log_size = size_of::<sgx_sealed_data_t>() + encoded_item_slice.len();
+
+    let _option = unsafe { sealed_data.to_raw_sealed_data_t(scratch_pad_pointer as *mut sgx_sealed_data_t, sealed_log_size as u32) };
+
+    unsafe { ocall::save_to_db(&mut retval, id, id_size, scratch_pad_pointer, sealed_log_size as usize) };
+
+    retval
 }

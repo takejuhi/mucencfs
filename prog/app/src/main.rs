@@ -83,7 +83,7 @@ fn main() {
     loop {
         server.wait();
 
-        let key: Vec<u8> = match unsafe {
+        match unsafe {
             server.verify(
                 enclave.geteid(),
                 &mut retval,
@@ -92,17 +92,17 @@ fn main() {
             )
         } {
             sgx_status_t::SGX_SUCCESS => {
-                unimplemented!("extract key from scratch pad");
+                unimplemented!();
             }
             _ => {
                 // error
                 continue;
             }
-        };
+        }
 
-        server.send_encrypt_key(&key);
+        server.send_report();
+        let user = server.authentication_request();
 
-        let user = server.get_data();
         let result = unsafe {
             user.save_to_db(
                 enclave.geteid(),
